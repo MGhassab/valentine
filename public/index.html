@@ -228,6 +228,23 @@
     </div>
 
     <script>
+        function getSessionId() {
+            let sessionId = sessionStorage.getItem("valentine_session");
+
+            if (!sessionId) {
+                sessionId =
+                    Date.now().toString(36) +
+                    Math.random().toString(36).substring(2);
+
+                sessionStorage.setItem(
+                    "valentine_session",
+                    sessionId
+                );
+            }
+
+            return sessionId;
+        }
+
       async function sendButtonEvent(
             eventType,
             button,
@@ -244,7 +261,10 @@
                     body: JSON.stringify({
                         event_type: eventType,
                         button: button,
-                        attempt_number: attemptNumber
+                        attempt_number: attemptNumber,
+                        session_id: getSessionId(),
+                        user_agent: navigator.userAgent,
+                        referrer: document.referrer || null
                     })
                 });
 
@@ -253,11 +273,15 @@
                 console.log("Event saved:", data);
 
             } catch (error) {
-                console.error("Failed to save event:", error);
+                console.error(
+                    "Failed to save event:",
+                    error
+                );
             }
         }
 
       document.addEventListener("DOMContentLoaded", () => {
+        sendButtonEvent("page_open", null, null);
         const noBtn = document.getElementById("noBtn");
         const yesBtn = document.getElementById("yesBtn");
         const result = document.getElementById("result");

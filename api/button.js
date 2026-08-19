@@ -6,43 +6,59 @@ const db = createClient({
 });
 
 export default async function handler(req, res) {
+
     if (req.method !== "POST") {
         return res.status(405).json({
             success: false,
-            message: "Method not allowed",
+            message: "Method not allowed"
         });
     }
 
     try {
+
         const {
             event_type,
             button,
-            attempt_number
+            attempt_number,
+            session_id,
+            user_agent,
+            referrer
         } = req.body;
 
         await db.execute({
             sql: `
-                INSERT INTO button_events
-                (event_type, button, attempt_number)
-                VALUES (?, ?, ?)
+                INSERT INTO button_events (
+                    event_type,
+                    button,
+                    attempt_number,
+                    session_id,
+                    user_agent,
+                    referrer
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
             `,
+
             args: [
                 event_type,
-                button,
+                button ?? null,
                 attempt_number ?? null,
-            ],
+                session_id ?? null,
+                user_agent ?? null,
+                referrer ?? null
+            ]
         });
 
         return res.status(200).json({
-            success: true,
+            success: true
         });
 
     } catch (error) {
+
         console.error("Database error:", error);
 
         return res.status(500).json({
             success: false,
-            message: "Database error",
+            message: "Database error"
         });
     }
 }
