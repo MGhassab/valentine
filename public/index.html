@@ -228,26 +228,34 @@
     </div>
 
     <script>
-      async function sendButtonEvent(button) {
-        try {
-            const response = await fetch("/api/button", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    button: button
-                })
-            });
+      async function sendButtonEvent(
+            eventType,
+            button,
+            attemptNumber = null
+        ) {
+            try {
+                const response = await fetch("/api/button", {
+                    method: "POST",
 
-            const data = await response.json();
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
 
-            console.log("Backend response:", data);
+                    body: JSON.stringify({
+                        event_type: eventType,
+                        button: button,
+                        attempt_number: attemptNumber
+                    })
+                });
 
-        } catch (error) {
-            console.error("Error sending button event:", error);
+                const data = await response.json();
+
+                console.log("Event saved:", data);
+
+            } catch (error) {
+                console.error("Failed to save event:", error);
+            }
         }
-      }
 
       document.addEventListener("DOMContentLoaded", () => {
         const noBtn = document.getElementById("noBtn");
@@ -287,11 +295,15 @@
         // NO BUTTON DODGE - FIX #2: Better viewport handling
         // =====================
         function moveNoButton() {
-          sendButtonEvent("no_attempt");
+          noCount++;
+
+        sendButtonEvent(
+            "button_attempt",
+            "no",
+            noCount
+        );
 
           if (noPageShown) return;
-
-          noCount++;
 
           // STOP immediately on last trigger
           if (noCount >= 5) {
@@ -384,7 +396,11 @@
         // YES BUTTON CLICK
         // =====================
         yesBtn.addEventListener("click", () => {
-          sendButtonEvent("yes");
+          sendButtonEvent(
+                "button_click",
+                "yes",
+                1
+            );
 
           const duration = 2000;
           const end = Date.now() + duration;
