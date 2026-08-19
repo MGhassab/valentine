@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Pearl's Activity</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: rgb(234, 234, 215);
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 35px;
+            color: #5c405b;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .card .number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #5c405b;
+            margin-top: 10px;
+        }
+
+        .final-choice {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .final-choice h2 {
+            margin-top: 0;
+            color: #5c405b;
+        }
+
+        .choice {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .timeline {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .timeline h2 {
+            color: #5c405b;
+        }
+
+        .event {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .event:last-child {
+            border-bottom: none;
+        }
+
+        .event-icon {
+            font-size: 25px;
+            width: 40px;
+        }
+
+        .event-info {
+            flex: 1;
+        }
+
+        .event-title {
+            font-weight: bold;
+        }
+
+        .event-time {
+            font-size: 13px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+        }
+
+        .error {
+            background: #ffe5e5;
+            color: #a00000;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        @media (max-width: 700px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 25px 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>💎 Pearl's Activity</h1>
+
+    <div id="error" class="error"></div>
+
+    <div class="stats">
+
+        <div class="card">
+            <div>Page Opens</div>
+            <div id="pageOpens" class="number">0</div>
+        </div>
+
+        <div class="card">
+            <div>No Attempts</div>
+            <div id="noAttempts" class="number">0</div>
+        </div>
+
+        <div class="card">
+            <div>Yes Clicks</div>
+            <div id="yesClicks" class="number">0</div>
+        </div>
+
+    </div>
+
+    <div class="final-choice">
+
+        <h2>Final Choice</h2>
+
+        <div id="finalChoice" class="choice">
+            —
+        </div>
+
+    </div>
+
+    <div class="timeline">
+
+        <h2>Activity Timeline</h2>
+
+        <div id="timeline">
+            <div class="loading">
+                Loading activity...
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+async function loadEvents() {
+
+    const errorElement = document.getElementById("error");
+
+    try {
+
+        const response = await fetch("/api/admin-events");
+
+        if (!response.ok) {
+            throw new Error(
+                `Server returned ${response.status}`
+            );
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(
+                data.message || "Failed to load events"
+            );
+        }
+
+        displayEvents(data.events);
+
+    } catch (error) {
+
+        console.error(error);
+
+        errorElement.style.display = "block";
+
+        errorElement.textContent =
+            "Failed to load activity: " + error.message;
+
+        document.getElementById("timeline").innerHTML = "";
+    }
+}
+
+
+function displayEvents(events) {
+
+    const pageOpens = events.filter(
+        event => event.event_type === "page_open"
+    ).length;
+
+    const noAttempts = events.filter(
+        event =>
+            event.event_type === "button_attempt" &&
+            event.button === "no"
+    ).length;
+
+    const yesClicks = events.filter(
+        event =>
+            event.event_type === "button_click" &&
+            event.button === "yes"
+    ).length;
+
+
+    document.getElementById("pageOpens").textContent =
+        pageOpens;
+
+    document.getElementById("noAttempts").textContent =
+        noAttempts;
+
+    document.getElementById("yesClicks").textContent =
+        yesClicks;
+
+
+    const yesEvent = events.find(
+        event =>
+            event.event_type === "button_click" &&
+            event.button === "yes"
+    );
+
+    const finalChoiceElement =
+        document.getElementById("finalChoice");
+
+    if (yesEvent) {
+
+        finalChoiceElement.textContent =
+            "❤️ YES";
+
+    } else if (noAttempts >= 5) {
+
+        finalChoiceElement.textContent =
+            "😅 NO";
+
+    } else {
+
+        finalChoiceElement.textContent =
+            "Not decided yet";
+
+    }
+
+
+    const timeline =
+        document.getElementById("timeline");
+
+    timeline.innerHTML = "";
+
+
+    if (!events || events.length === 0) {
+
+        timeline.innerHTML = `
+            <div class="loading">
+                No activity yet.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    events.forEach(event => {
+
+        const element =
+            document.createElement("div");
+
+        element.className = "event";
+
+
+        let icon = "📌";
+        let title = event.event_type;
+
+
+        if (
+            event.event_type === "page_open"
+        ) {
+
+            icon = "👀";
+            title = "Page opened";
+
+        } else if (
+            event.event_type === "button_attempt" &&
+            event.button === "no"
+        ) {
+
+            icon = "😅";
+
+            title =
+                `No attempt #${event.attempt_number}`;
+
+        } else if (
+            event.event_type === "button_click" &&
+            event.button === "yes"
+        ) {
+
+            icon = "❤️";
+            title = "YES clicked";
+
+        }
+
+
+        const date =
+            new Date(event.created_at);
+
+
+        const time =
+            date.toLocaleString();
+
+
+        element.innerHTML = `
+
+            <div class="event-icon">
+                ${icon}
+            </div>
+
+            <div class="event-info">
+
+                <div class="event-title">
+                    ${title}
+                </div>
+
+                <div class="event-time">
+                    ${time}
+                </div>
+
+            </div>
+
+        `;
+
+
+        timeline.appendChild(element);
+
+    });
+
+}
+
+
+loadEvents();
+
+</script>
+
+</body>
+</html>
