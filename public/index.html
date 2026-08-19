@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Be My Valentine</title>
+
+    <!-- Cute Google Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- GSAP -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.0/dist/gsap.min.js"></script>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: linear-gradient(135deg, #EAEAD7, #F5F5E8);
+        font-family: "Poppins", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        overflow: hidden;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 25px;
+        /*max-width: 400px;*/
+        width: 100vw;
+        height: 100vh;
+        z-index: 2;
+        position: relative;
+      }
+
+      h1 {
+        color: #5A2633;
+        font-size: 22px;
+        font-weight: 600;
+      }
+
+      .question {
+        font-size: 28px;
+        font-weight: 600;
+        color: #5A2633;
+        margin-bottom: 20px;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        /*position: relative;*/
+      }
+
+      button {
+        padding: 15px 35px;
+        font-size: 18px;
+        border: none;
+        border-radius: 40px;
+        cursor: pointer;
+        min-width: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      #yesBtn {
+        background-color: #ff4d6d;
+        color: white;
+      }
+
+      #noBtn {
+        background-color: #444;
+        color: white;
+      }
+
+      .result {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        color: #5A2633;
+        z-index: 2;
+        position: relative;
+      }
+
+      .result img,
+      .result video {
+        max-width: 280px;
+        width: 100%;
+        border-radius: 20px;
+      }
+
+      .result-img-no {
+        mix-blend-mode: darken;
+      }
+
+      /* Improved floating hearts */
+      .heart {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        opacity: 0.8;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .heart::before,
+      .heart::after {
+        content: "";
+        position: absolute;
+        width: 10px;
+        height: 16px;
+        background: #ff4d6d;
+        border-radius: 10px 10px 0 0;
+      }
+
+      .heart::before {
+        left: 10px;
+        transform: rotate(-45deg);
+        transform-origin: 0 100%;
+      }
+
+      .heart::after {
+        left: 0;
+        transform: rotate(45deg);
+        transform-origin: 100% 100%;
+      }
+
+      /* Inline hearts for text */
+      .heart-icon {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        position: relative;
+        vertical-align: middle;
+        margin: 0 2px;
+      }
+
+      .heart-icon::before,
+      .heart-icon::after {
+        content: "";
+        position: absolute;
+        width: 9px;
+        height: 14px;
+        background: currentColor;
+        border-radius: 9px 9px 0 0;
+      }
+
+      .heart-icon::before {
+        left: 9px;
+        transform: rotate(-45deg);
+        transform-origin: 0 100%;
+      }
+
+      .heart-icon::after {
+        left: 0;
+        transform: rotate(45deg);
+        transform-origin: 100% 100%;
+      }
+
+      .heart-red {
+        color: #ff4d6d;
+      }
+
+      .heart-white {
+        color: white;
+      }
+
+      .heart-broken {
+        color: #666;
+        position: relative;
+      }
+
+      .heart-broken::after {
+        content: "";
+        position: absolute;
+        width: 2px;
+        height: 20px;
+        background: white;
+        top: -2px;
+        left: 50%;
+        transform: translateX(-50%) rotate(15deg);
+        z-index: 1;
+      }
+      h2 {
+        font-weight: 600;
+      }
+    </style>
+    <!-- Statsfa Website Analytics Start -->
+    <script
+      data-host="https://statsfa.com"
+      data-dnt="false"
+      src="https://statsfa.com/js/script.js"
+      id="ZwSg9rf6GA"
+      async
+      defer
+    ></script>
+    <!-- Statsfa Website Analytics End -->
+    <link rel="preload" as="image" href="yes.gif" />
+    <link rel="preload" as="image" href="no.gif" />
+  </head>
+  <body>
+    <div class="container">
+      <div id="main">
+        <div class="question">Will you be my valentine?</div>
+        <div class="buttons">
+          <button id="yesBtn">Yes 💖</button>
+          <button id="noBtn">No 💔</button>
+        </div>
+      </div>
+      <div class="result" id="result"></div>
+    </div>
+
+    <script>
+      async function sendButtonEvent(button) {
+        try {
+            const response = await fetch("/api/button", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    button: button
+                })
+            });
+
+            const data = await response.json();
+
+            console.log("Backend response:", data);
+
+        } catch (error) {
+            console.error("Error sending button event:", error);
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const noBtn = document.getElementById("noBtn");
+        const yesBtn = document.getElementById("yesBtn");
+        const result = document.getElementById("result");
+        const main = document.getElementById("main");
+        let noCount = 0;
+        let noPageShown = false; // FIX #1: Prevent double rendering
+
+        // =====================
+        // FUN BACKGROUND HEARTS
+        // =====================
+        function createHeart() {
+          const heart = document.createElement("div");
+          heart.classList.add("heart");
+          document.body.appendChild(heart);
+          const size = Math.random() * 15 + 10;
+          heart.style.width = size + "px";
+          heart.style.height = size + "px";
+          const startX = Math.random() * window.innerWidth;
+          heart.style.left = startX + "px";
+          heart.style.top = window.innerHeight + "px";
+
+          gsap.to(heart, {
+            y: -window.innerHeight - 50,
+            x: "+=" + (Math.random() * 50 - 25),
+            rotation: Math.random() * 60 - 30,
+            opacity: 0,
+            duration: Math.random() * 3 + 3,
+            ease: "power1.out",
+            onComplete: () => heart.remove(),
+          });
+        }
+        setInterval(createHeart, 300);
+
+        // =====================
+        // NO BUTTON DODGE - FIX #2: Better viewport handling
+        // =====================
+        function moveNoButton() {
+          sendButtonEvent("no_attempt");
+
+          if (noPageShown) return;
+
+          noCount++;
+
+          // STOP immediately on last trigger
+          if (noCount >= 5) {
+            noPageShown = true;
+            showNoPage();
+            return; // 🚀 prevents extra movement
+          }
+
+          const rect = noBtn.getBoundingClientRect();
+          const btnWidth = rect.width;
+          const btnHeight = rect.height;
+
+          if (noBtn.style.position !== "absolute") {
+            noBtn.style.position = "absolute";
+            noBtn.style.left = rect.left + "px";
+            noBtn.style.top = rect.top + "px";
+          }
+
+          const padding = 80;
+          const maxX = window.innerWidth - btnWidth - padding;
+          const maxY = window.innerHeight - btnHeight - padding;
+
+          const minX = padding;
+          const minY = padding;
+
+          let randomX = Math.random() * (maxX - minX) + minX;
+          let randomY = Math.random() * (maxY - minY) + minY;
+
+          randomX = Math.max(minX, Math.min(randomX, maxX));
+          randomY = Math.max(minY, Math.min(randomY, maxY));
+
+          gsap.to(noBtn, {
+            duration: 0.6,
+            left: randomX + "px",
+            top: randomY + "px",
+            rotation: Math.random() * 30 - 15,
+            ease: "elastic.out(1, 0.5)",
+          });
+        }
+
+        noBtn.addEventListener("mouseenter", moveNoButton);
+        noBtn.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          moveNoButton();
+        });
+
+        // =====================
+        // YES BUTTON PULSE
+        // =====================
+        gsap.to("#yesBtn", {
+          scale: 1.1,
+          repeat: -1,
+          yoyo: true,
+          duration: 0.8,
+          ease: "power1.inOut",
+        });
+
+        // =====================
+        // PAGE SWITCH FUNCTION
+        // =====================
+        function switchPage(contentHtml, isYes = true) {
+          gsap.to(main, {
+            duration: 0.5,
+            opacity: 0,
+            scale: 0.8,
+            ease: "power1.inOut",
+            onComplete: () => {
+              main.style.display = "none";
+
+              // Reset No button completely with GSAP
+              gsap.killTweensOf(noBtn);
+              gsap.set(noBtn, { clearProps: "all" });
+
+              // Show result
+              result.innerHTML = contentHtml;
+              result.style.display = "flex";
+
+              gsap.from(result, {
+                duration: 0.8,
+                opacity: 0,
+                scale: 0.6,
+                rotation: isYes ? -15 : 15,
+                ease: "back.out(2)",
+              });
+            },
+          });
+        }
+
+        // =====================
+        // YES BUTTON CLICK
+        // =====================
+        yesBtn.addEventListener("click", () => {
+          sendButtonEvent("yes");
+
+          const duration = 2000;
+          const end = Date.now() + duration;
+
+          function confettiHearts() {
+            confetti({
+              particleCount: 7,
+              spread: 100,
+              origin: { x: Math.random() },
+              colors: ["#ff4d6d", "#ff99aa", "#fff"],
+            });
+            createHeart();
+            if (Date.now() < end) requestAnimationFrame(confettiHearts);
+          }
+          confettiHearts();
+
+          switchPage(
+            `
+        <h2>OH MY GODDD 💕 :)</h2>
+        <img src="yes.gif" alt="Yes animation">
+    `,
+            true,
+          );
+        });
+
+        // =====================
+        // NO PAGE
+        // =====================
+        function showNoPage() {
+          switchPage(
+            `
+        <h2>STOP MESSING WITH ME! 😤</h2>
+        <img src="no.gif" alt="no animation" class="result-img-no">
+    `,
+            false,
+          );
+
+          setTimeout(resetPage, 3000);
+        }
+
+        // =====================
+        // RESET PAGE
+        // =====================
+        function resetPage() {
+          gsap.to(result, {
+            duration: 0.5,
+            opacity: 0,
+            scale: 0.8,
+            ease: "power1.inOut",
+            onComplete: () => {
+              // Hide result
+              result.style.display = "none";
+              result.style.opacity = 1;
+              result.style.transform = "none";
+
+              // Show main container
+              main.style.display = "flex";
+              main.style.height = "100vh";
+              main.style.width = "100vw";
+              main.style.flexDirection = "column";
+              main.style.justifyContent = "center";
+              main.style.alignItems = "center";
+
+              gsap.fromTo(
+                main,
+                { opacity: 0, scale: 0.9 },
+                { duration: 0.5, opacity: 1, scale: 1, ease: "power1.out" },
+              );
+
+              // Reset No button safely
+              noBtn.style.position = "relative"; // keep in flow
+              noBtn.style.left = "0px"; // start at container position
+              noBtn.style.top = "0px";
+              noBtn.style.transform = "none"; // remove rotation
+              gsap.killTweensOf(noBtn); // stop any animations
+
+              // Reset counters
+              noCount = 0;
+              noPageShown = false;
+            },
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
