@@ -36,9 +36,12 @@ app.post("/api/button", (req, res) => {
     });
 });
 
-// Admin events - local mock
+// Admin events - local mock (real DB on Vercel)
+app.get("/api/admin-events", (req, res) => {
+    res.json({ success: true, events: [] });
+});
+
 app.delete("/api/admin-events", (req, res) => {
-    console.log("All records deleted");
     res.json({ success: true, message: "All records deleted" });
 });
 
