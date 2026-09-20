@@ -25,6 +25,13 @@ export default async function handler(req, res) {
             referrer
         } = req.body;
 
+        const user_ip =
+            req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+            req.headers["x-real-ip"] ||
+            req.socket?.remoteAddress ||
+            req.ip ||
+            null;
+
         await db.execute({
             sql: `
                 INSERT INTO button_events (
@@ -33,9 +40,10 @@ export default async function handler(req, res) {
                     attempt_number,
                     session_id,
                     user_agent,
-                    referrer
+                    referrer,
+                    user_ip
                 )
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             `,
 
             args: [
@@ -44,7 +52,8 @@ export default async function handler(req, res) {
                 attempt_number ?? null,
                 session_id ?? null,
                 user_agent ?? null,
-                referrer ?? null
+                referrer ?? null,
+                user_ip
             ]
         });
 

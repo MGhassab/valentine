@@ -14,7 +14,14 @@ app.use(express.static(path.join(__dirname, "public")));
 app.post("/api/button", (req, res) => {
     const { button } = req.body;
 
-    console.log("Button pressed:", button);
+    const user_ip =
+        req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+        req.headers["x-real-ip"] ||
+        req.socket?.remoteAddress ||
+        req.ip ||
+        "unknown";
+
+    console.log("Button pressed:", button, "| IP:", user_ip);
 
     if (!button) {
         return res.status(400).json({
@@ -27,6 +34,12 @@ app.post("/api/button", (req, res) => {
         success: true,
         button: button
     });
+});
+
+// Admin events - local mock
+app.delete("/api/admin-events", (req, res) => {
+    console.log("All records deleted");
+    res.json({ success: true, message: "All records deleted" });
 });
 
 // Render provides the PORT environment variable

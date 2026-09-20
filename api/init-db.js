@@ -13,6 +13,10 @@ export default async function handler(req, res) {
                 event_type TEXT NOT NULL,
                 button TEXT,
                 attempt_number INTEGER,
+                session_id TEXT,
+                user_agent TEXT,
+                referrer TEXT,
+                user_ip TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         `);

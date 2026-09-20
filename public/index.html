@@ -25,6 +25,7 @@
       }
       body {
         background: linear-gradient(135deg, #EAEAD7, #F5F5E8);
+        transition: background 1.5s ease;
         font-family: "Poppins", sans-serif;
         display: flex;
         justify-content: center;
@@ -110,6 +111,10 @@
         mix-blend-mode: darken;
       }
 
+      .reallyNo-img {
+        max-width: 840px !important;
+      }
+
       /* Improved floating hearts */
       .heart {
         position: absolute;
@@ -128,6 +133,11 @@
         height: 16px;
         background: #ff4d6d;
         border-radius: 10px 10px 0 0;
+      }
+
+      .heart-darkblue::before,
+      .heart-darkblue::after {
+        background: #1a237e;
       }
 
       .heart::before {
@@ -214,6 +224,7 @@
     <!-- Statsfa Website Analytics End -->
     <link rel="preload" as="image" href="yes.gif" />
     <link rel="preload" as="image" href="no.gif" />
+    <link rel="preload" as="image" href="reallyNo.webp" />
   </head>
   <body>
     <div class="container">
@@ -288,6 +299,7 @@
         const main = document.getElementById("main");
         let noCount = 0;
         let noPageShown = false; // FIX #1: Prevent double rendering
+        let reallyNoPageShown = false; // Prevents return to index after 15 "No"s
 
         // =====================
         // FUN BACKGROUND HEARTS
@@ -295,6 +307,7 @@
         function createHeart() {
           const heart = document.createElement("div");
           heart.classList.add("heart");
+          if (reallyNoPageShown) heart.classList.add("heart-darkblue");
           document.body.appendChild(heart);
           const size = Math.random() * 15 + 10;
           heart.style.width = size + "px";
@@ -327,13 +340,20 @@
             noCount
         );
 
-          if (noPageShown) return;
+          if (noPageShown || reallyNoPageShown) return;
 
-          // STOP immediately on last trigger
-          if (noCount >= 5) {
+          // 15th "No" — permanent ReallyNo page, no return to index
+          if (noCount >= 15) {
+            reallyNoPageShown = true;
+            showReallyNoPage();
+            return;
+          }
+
+          // Every 5th "No" (5, 10) — show No page, then reset back to index
+          if (noCount % 5 === 0) {
             noPageShown = true;
             showNoPage();
-            return; // 🚀 prevents extra movement
+            return;
           }
 
           const rect = noBtn.getBoundingClientRect();
@@ -420,6 +440,8 @@
         // YES BUTTON CLICK
         // =====================
         yesBtn.addEventListener("click", () => {
+          if (reallyNoPageShown) return; // permanent — can't escape
+
           sendButtonEvent(
                 "button_click",
                 "yes",
@@ -466,6 +488,37 @@
         }
 
         // =====================
+        // REALLY NO PAGE (permanent — 15 "No"s)
+        // =====================
+        function showReallyNoPage() {
+          switchPage(
+            `
+        <h2>Sorry!</h2>
+        <img src="reallyNo.webp" alt="really no" class="result-img-no reallyNo-img">
+    `,
+            false,
+          );
+
+          // Smoothly transition background to dark gray
+          setTimeout(() => {
+            document.body.style.background = "#5a5a5a";
+          }, 600);
+
+          // Do NOT call resetPage — this is permanent.
+          // Disable the No button so it can't be clicked again.
+          noBtn.removeEventListener("mouseenter", moveNoButton);
+          noBtn.removeEventListener("touchstart", moveNoButton);
+          noBtn.style.display = "none";
+
+          // Also change text color to white for dark background
+          setTimeout(() => {
+            const resultEl = document.getElementById("result");
+            resultEl.style.color = "#fff";
+            resultEl.querySelectorAll("h2").forEach(h => h.style.color = "#fff");
+          }, 1500);
+        }
+
+        // =====================
         // RESET PAGE
         // =====================
         function resetPage() {
@@ -501,8 +554,7 @@
               noBtn.style.transform = "none"; // remove rotation
               gsap.killTweensOf(noBtn); // stop any animations
 
-              // Reset counters
-              noCount = 0;
+              // Reset flags only (keep noCount so it still reaches 15)
               noPageShown = false;
             },
           });
