@@ -7,8 +7,13 @@ const db = createClient({
 
 export default async function handler(req, res) {
     try {
+        // Recreate table with full schema
         await db.execute(`
-            CREATE TABLE IF NOT EXISTS button_events (
+            DROP TABLE IF EXISTS button_events
+        `);
+
+        await db.execute(`
+            CREATE TABLE button_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 event_type TEXT NOT NULL,
                 button TEXT,
@@ -27,7 +32,7 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
+        console.error("Database initialization failed:", error);
 
         return res.status(500).json({
             success: false,
