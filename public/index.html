@@ -300,7 +300,7 @@
         const main = document.getElementById("main");
         let noCount = 0;
         let noPageShown = false; // FIX #1: Prevent double rendering
-        let reallyNoPageShown = false; // Prevents return to index after 15 "No"s
+        let reallyNoPageShown = false; // Prevents return to index after 20 "No"s
 
         // =====================
         // FUN BACKGROUND HEARTS
@@ -343,8 +343,8 @@
 
           if (noPageShown || reallyNoPageShown) return;
 
-          // 15th "No" — permanent ReallyNo page, no return to index
-          if (noCount >= 15) {
+          // 20th "No" — permanent ReallyNo page, no return to index
+          if (noCount >= 20) {
             reallyNoPageShown = true;
             showReallyNoPage();
             return;
@@ -489,7 +489,7 @@
         }
 
         // =====================
-        // REALLY NO PAGE (permanent — 15 "No"s)
+        // REALLY NO PAGE (permanent — 20 "No"s)
         // =====================
         function showReallyNoPage() {
           switchPage(
@@ -555,7 +555,7 @@
               noBtn.style.transform = "none"; // remove rotation
               gsap.killTweensOf(noBtn); // stop any animations
 
-              // Reset flags only (keep noCount so it still reaches 15)
+              // Reset flags only (keep noCount so it still reaches 20)
               noPageShown = false;
             },
           });
