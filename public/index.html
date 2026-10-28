@@ -230,7 +230,7 @@
     <div class="container">
       <div id="main">
         <!-- <div class="question">Will you be my girl until Valentine’s Day?</div> -->
-        <div class="question">Can I keep your green hair tie, at least until Valentine’s Day?</div>
+        <div class="question">I want your green hair tie. Can I keep it for you?</div>
         <div class="buttons">
           <button id="yesBtn">Yes 💖</button>
           <button id="noBtn">No 💔</button>
@@ -301,7 +301,7 @@
         let noCount = 0;
         let yesCount = 0;
         let noPageShown = false; // FIX #1: Prevent double rendering
-        let reallyNoPageShown = false; // Prevents return to index after 20 "No"s
+        let reallyNoPageShown = false; // Prevents return to index after 15 "No"s
 
         // =====================
         // FUN BACKGROUND HEARTS
@@ -380,8 +380,8 @@
 
           if (noPageShown || reallyNoPageShown) return;
 
-          // 20th "No" — permanent ReallyNo page, no return to index
-          if (noCount >= 20) {
+          // 15th "No" — permanent ReallyNo page, no return to index
+          if (noCount >= 15) {
             reallyNoPageShown = true;
             showReallyNoPage();
             return;
@@ -514,12 +514,12 @@
         }
 
         // =====================
-        // REALLY NO PAGE (permanent — 20 "No"s)
+        // REALLY NO PAGE (permanent — 15 "No"s)
         // =====================
         function showReallyNoPage() {
           switchPage(
             `
-        <h2>I’ve said it before, and I’ll say it again: you’re beautiful, like the shapes clouds make. Take care of yourself Sadaf :)</h2>
+        <h2>I’ve said it before and I’ll say it again. you’re beautiful, like the shapes clouds make. Sadaf, You’re absolutely extraordinary :)</h2>
         <img src="reallyNo.webp" alt="really no" class="result-img-no reallyNo-img">
     `,
             false,
@@ -589,7 +589,7 @@
               gsap.set(yesBtn, { scale: 1 });
               startYesPulse();
 
-              // Reset flags only (keep noCount so it still reaches 20)
+              // Reset flags only (keep noCount so it still reaches 15)
               noPageShown = false;
             },
           });
