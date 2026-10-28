@@ -299,6 +299,7 @@
         const result = document.getElementById("result");
         const main = document.getElementById("main");
         let noCount = 0;
+        let yesCount = 0;
         let noPageShown = false; // FIX #1: Prevent double rendering
         let reallyNoPageShown = false; // Prevents return to index after 20 "No"s
 
@@ -330,6 +331,42 @@
         setInterval(createHeart, 300);
 
         // =====================
+        // MOVE BUTTON TO RANDOM POSITION
+        // =====================
+        function moveButton(btn) {
+          const rect = btn.getBoundingClientRect();
+          const btnWidth = rect.width;
+          const btnHeight = rect.height;
+
+          if (btn.style.position !== "absolute") {
+            btn.style.position = "absolute";
+            btn.style.left = rect.left + "px";
+            btn.style.top = rect.top + "px";
+          }
+
+          const padding = 80;
+          const maxX = window.innerWidth - btnWidth - padding;
+          const maxY = window.innerHeight - btnHeight - padding;
+
+          const minX = padding;
+          const minY = padding;
+
+          let randomX = Math.random() * (maxX - minX) + minX;
+          let randomY = Math.random() * (maxY - minY) + minY;
+
+          randomX = Math.max(minX, Math.min(randomX, maxX));
+          randomY = Math.max(minY, Math.min(randomY, maxY));
+
+          gsap.to(btn, {
+            duration: 0.6,
+            left: randomX + "px",
+            top: randomY + "px",
+            rotation: Math.random() * 30 - 15,
+            ease: "elastic.out(1, 0.5)",
+          });
+        }
+
+        // =====================
         // NO BUTTON DODGE - FIX #2: Better viewport handling
         // =====================
         function moveNoButton() {
@@ -357,36 +394,7 @@
             return;
           }
 
-          const rect = noBtn.getBoundingClientRect();
-          const btnWidth = rect.width;
-          const btnHeight = rect.height;
-
-          if (noBtn.style.position !== "absolute") {
-            noBtn.style.position = "absolute";
-            noBtn.style.left = rect.left + "px";
-            noBtn.style.top = rect.top + "px";
-          }
-
-          const padding = 80;
-          const maxX = window.innerWidth - btnWidth - padding;
-          const maxY = window.innerHeight - btnHeight - padding;
-
-          const minX = padding;
-          const minY = padding;
-
-          let randomX = Math.random() * (maxX - minX) + minX;
-          let randomY = Math.random() * (maxY - minY) + minY;
-
-          randomX = Math.max(minX, Math.min(randomX, maxX));
-          randomY = Math.max(minY, Math.min(randomY, maxY));
-
-          gsap.to(noBtn, {
-            duration: 0.6,
-            left: randomX + "px",
-            top: randomY + "px",
-            rotation: Math.random() * 30 - 15,
-            ease: "elastic.out(1, 0.5)",
-          });
+          moveButton(noBtn);
         }
 
         noBtn.addEventListener("mouseenter", moveNoButton);
@@ -398,13 +406,16 @@
         // =====================
         // YES BUTTON PULSE
         // =====================
-        gsap.to("#yesBtn", {
-          scale: 1.1,
-          repeat: -1,
-          yoyo: true,
-          duration: 0.8,
-          ease: "power1.inOut",
-        });
+        function startYesPulse() {
+          gsap.to("#yesBtn", {
+            scale: 1.1,
+            repeat: -1,
+            yoyo: true,
+            duration: 0.8,
+            ease: "power1.inOut",
+          });
+        }
+        startYesPulse();
 
         // =====================
         // PAGE SWITCH FUNCTION
@@ -443,11 +454,25 @@
         yesBtn.addEventListener("click", () => {
           if (reallyNoPageShown) return; // permanent — can't escape
 
+          yesCount++;
+
           sendButtonEvent(
                 "button_click",
                 "yes",
-                1
+                yesCount
             );
+
+          // First 4 clicks — dodge instead of navigating
+          if (yesCount < 5) {
+            gsap.killTweensOf(yesBtn);
+            gsap.set(yesBtn, { scale: 1 });
+            moveButton(yesBtn);
+            return;
+          }
+
+          // 5th click — show the Yes page
+          gsap.killTweensOf(yesBtn);
+          gsap.set(yesBtn, { scale: 1 });
 
           const duration = 2000;
           const end = Date.now() + duration;
@@ -554,6 +579,15 @@
               noBtn.style.top = "0px";
               noBtn.style.transform = "none"; // remove rotation
               gsap.killTweensOf(noBtn); // stop any animations
+
+              // Reset Yes button safely
+              gsap.killTweensOf(yesBtn);
+              yesBtn.style.position = "relative";
+              yesBtn.style.left = "0px";
+              yesBtn.style.top = "0px";
+              yesBtn.style.transform = "none";
+              gsap.set(yesBtn, { scale: 1 });
+              startYesPulse();
 
               // Reset flags only (keep noCount so it still reaches 20)
               noPageShown = false;

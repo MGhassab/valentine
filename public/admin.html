@@ -290,7 +290,8 @@ function displayEvents(events) {
     const yesEvent = events.find(
         event =>
             event.event_type === "button_click" &&
-            event.button === "yes"
+            event.button === "yes" &&
+            Number(event.attempt_number) >= 5
     );
 
     const finalChoiceElement =
@@ -367,7 +368,11 @@ function displayEvents(events) {
         ) {
 
             icon = "❤️";
-            title = "YES clicked";
+
+            title =
+                Number(event.attempt_number) >= 5
+                    ? "YES clicked"
+                    : `Yes attempt #${event.attempt_number}`;
 
         }
 
